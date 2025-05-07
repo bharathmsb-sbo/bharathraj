@@ -1,0 +1,52 @@
+//NaanMudhalvan project
+//AI-Powered Student Performance Prediction System
+
+import pandas as pd
+from sklearn.model_selection import train_test_split
+from sklearn.preprocessing import LabelEncoder, StandardScaler
+from sklearn.ensemble import RandomForestClassifier
+from sklearn.metrics import accuracy_score, classification_report, confusion_matrix
+import seaborn as sns
+import matplotlib.pyplot as plt
+
+# Load dataset
+df = pd.read_csv("student-mat.csv", sep=';')
+
+# Select features
+df['pass'] = df['G3'] >= 10
+df['pass'] = df['pass'].map({True: 1, False: 0})
+df = df.drop(['G1', 'G2', 'G3'], axis=1)
+
+# Encode categorical data
+label_cols = df.select_dtypes(include=['object']).columns
+for col in label_cols:
+    df[col] = LabelEncoder().fit_transform(df[col])
+
+# Split data
+X = df.drop('pass', axis=1)
+y = df['pass']
+X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
+
+# Scale data
+scaler = StandardScaler()
+X_train = scaler.fit_transform(X_train)
+X_test = scaler.transform(X_test)
+
+# Train model
+model = RandomForestClassifier()
+model.fit(X_train, y_train)
+
+# Predict
+y_pred = model.predict(X_test)
+
+# Evaluate
+print("Accuracy:", accuracy_score(y_test, y_pred))
+print(classification_report(y_test, y_pred))
+
+# Confusion matrix
+cm = confusion_matrix(y_test, y_pred)
+sns.heatmap(cm, annot=True, fmt="d", cmap="Blues")
+plt.xlabel("Predicted")
+plt.ylabel("Actual")
+plt.title("Confusion Matrix")
+plt.show()
